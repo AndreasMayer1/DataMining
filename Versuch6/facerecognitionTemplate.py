@@ -149,8 +149,6 @@ def calculateNormedArrayOfFaces(length, matrix):
             pixel = matrix[row][coulumn]
             #print str('Current Pixelvalue: '+str(pixel))
             pixel -= averageImage[row]
-            if pixel < 0:
-                pixel = 0
             #print str('New value of Pixel (Difference): '+str(pixel))
             resultMatrix[row][coulumn] = pixel
             #print str('Modified Row: ' +str(matrix[row]))
@@ -313,8 +311,11 @@ def calculateNormedArrayOfFacesReverse(originalMatrix, normedArray):
     for row in range(len(normedArray)):
         for coulumn in range(pictureLength):
             resultMatrix[row][coulumn] = normedArray[row][coulumn] + averageImage[row]
-            if resultMatrix[row][coulumn] > 1:
-                resultMatrix[row][coulumn] = 1
+            
+    # it's not guaranteed that the pixel values are between 0 and 1. Scale the values to fit in this range. 
+    for resultMatrixIdx in range(len(resultMatrix)):            
+        resultMatrix[resultMatrixIdx] = ( resultMatrix[resultMatrixIdx] + (-1 * np.min(resultMatrix, 1)[resultMatrixIdx]) ) / ( np.max(resultMatrix, 1)[resultMatrixIdx] + (-1 * np.min(resultMatrix, 1)[resultMatrixIdx]) )
+                
     return resultMatrix
     
 
