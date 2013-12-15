@@ -114,7 +114,91 @@ def convertImgListToNumpyData(length, list):
             counter += 1
 
     return resultMatrix
+    
+def calculateEuclideanDistance(A, B):
+    '''
+    This Function calculates the euclidean distance between two Matrices
 
+    Parameters:
+    ===========
+
+    A --> Matrix A
+    B --> Matrix B
+
+    Returns:
+    ========
+    float-value of the euclidean distance
+    '''
+    
+    flatA = A.flatten()
+    flatB = B.flatten()
+    
+    costs = 0
+    
+    for i in range(len(flatA)):
+        costs = costs + math.pow(flatA[i]-flatB[i],2)
+    
+    costs = math.sqrt(costs)
+    return costs
+
+
+def calculateAverageArrayOfFaces(matrix):
+    '''
+    This Function calculates the average of a matrix
+
+    Parameters:
+    ===========
+
+    matrix -> matrix for the images
+    
+    Returns:
+    ========
+    float-value of the matrix-average
+    '''
+    
+    flatM = matrix.flatten()
+    
+    imageSum = 0
+    
+    for row in range(0, len(flatM)):
+        imageSum += flatM[row]
+    
+    averageImage = imageSum / len(flatM)
+    #print averageImage
+    return averageImage
+   
+   
+def subtractAverage(length, matrix, averageImage):
+    '''
+    This Function substracts a value from a matrix
+
+    Parameters:
+    ===========
+
+    length -> Size of the image (per Default 14750 | for an image with size: 167x250)
+    matrix -> matrix for the images
+    averageImage: substract value
+
+    Returns:
+    ========
+    matrix with substracted value in each column/row
+    '''
+    # defines the resultMatrix
+    resultMatrix = np.empty(np.shape(matrix))
+    
+    # calculates the average of the images
+    averageImage = calculateAverageArrayOfFaces(matrix)
+    
+    # calculates the normed matrix
+    for row in range(len(matrix)):
+        for coulumn in range(length):
+            pixel = matrix[row][coulumn]
+            pixel -= averageImage
+            if pixel < 0:
+                pixel = 0
+            resultMatrix[row][coulumn] = pixel
+            
+    return matrix
 
 def calculateNormedArrayOfFaces(length, matrix):
     '''
@@ -133,13 +217,10 @@ def calculateNormedArrayOfFaces(length, matrix):
     '''
     # defines the resultMatrix
     resultMatrix = np.empty(np.shape(matrix))
-    imageSum = matrix[0]
-
+    
     # calculates the average of the images
-    for row in range(1, len(matrix)):
-        imageSum = imageSum + matrix[row]
-    averageImage = imageSum / len(matrix)
-
+    averageImage = calculateAverageArrayOfFaces(matrix)
+    
     # calculates the normed matrix
     for row in range(len(matrix)):
         for coulumn in range(length):
@@ -148,7 +229,7 @@ def calculateNormedArrayOfFaces(length, matrix):
             #print str('For Row: ' + str(matrix[row]))
             pixel = matrix[row][coulumn]
             #print str('Current Pixelvalue: '+str(pixel))
-            pixel -= averageImage[row]
+            pixel -= averageImage
             if pixel < 0:
                 pixel = 0
             #print str('New value of Pixel (Difference): '+str(pixel))
@@ -317,49 +398,71 @@ def calculateNormedArrayOfFacesReverse(originalMatrix, normedArray):
                 resultMatrix[row][coulumn] = 1
     return resultMatrix
     
+    
+def mainTest():
+    
+        #Choose Directory which contains all training images
+        TrainDir=tkFileDialog.askdirectory(title="Choose Directory of training images")
+        
+        #Choose the file extension of the image files
+        Extension='png'
+        
+        #Choose the image which shall be recognized       
+        testImageDirAndFilename=tkFileDialog.askopenfilename(title="Choose Image to detect")
+        
+        imagelist = parseDirectory(TrainDir, Extension)
+        faceList = generateListOfImgs(imagelist)
+        faceList2 = [1]
+        faceList2[0] = Image.open(testImageDirAndFilename).convert('L')
 
-
-####################################################################################
-#Start of main programm
-
-# Don't execute this if this file is used as a module in another file. 
-if __name__ == '__main__':
-
-    #Choose Directory which contains all training images 
-    TrainDir=tkFileDialog.askdirectory(title="Choose Directory of training images")
-    #Choose the file extension of the image files
-    Extension='png'
-    #Choose the image which shall be recognized
-    testImageDirAndFilename=tkFileDialog.askopenfilename(title="Choose Image to detect")
-
-####################################################################################
-# Implement required functionality of the main programm here
-
-    faceList = generateListOfImgs(parseDirectory(TrainDir, Extension))
-    
-    # all images must be the same size
-    imageSize = faceList[0].size[0] * faceList[0].size[1]
-    
-    # size of the pitcure is 41750 - so we need a length of 41750 for the matrix
-    matrix = convertImgListToNumpyData(imageSize, faceList)
-    
-    normedArrayOfFaces = calculateNormedArrayOfFaces(imageSize, matrix)
-    
-    eigenfaces = calculateEigenfaces(normedArrayOfFaces)
-    
-    relevantEigenfaces = eigenfaces[:7]
-    
-    saveEigenvektorsAsImage(matrix, relevantEigenfaces)
-    
-    '''
-    @todo calculate eigenspace average for all image of one person and compare them with eigenspace point of test image to find the person with minimum distance
-    below there are two examples
-    @todo remove examples :)
-    '''
-    # calculate eigenspace point for one picture
-    print projectImageOnEigenspace(relevantEigenfaces, matrix[0])
-    
-    # calculate eigenspace point for multiple picture (they should be from the same person, maybe that's not true for this example, i didn't check that) 
-    print projectImagesOfSamePersonOnEigenspace(relevantEigenfaces, matrix[3:6])
-    
-
+        # all images must be the same size
+        imageSize = faceList[0].size[0] * faceList[0].size[1]
+        
+        # size of the pitcure is 41750 - so we need a length of 41750 for the matrix
+        matrix = convertImgListToNumpyData(imageSize, faceList)
+        matrix2 = convertImgListToNumpyData(imageSize, faceList2)
+        
+        normedArrayOfFaces = calculateNormedArrayOfFaces(imageSize, matrix)
+        
+        eigenfaces = calculateEigenfaces(normedArrayOfFaces)
+        
+        # set the dimension of Eigenfaces
+        relevantEigenfaces = eigenfaces[:7]
+        
+        # calculate the average of trainingpictures
+        imageAverage = calculateAverageArrayOfFaces(matrix)
+        
+        # substract the average from the testpicture
+        NormedTestFace = subtractAverage(imageSize, matrix2, imageAverage)
+        
+        maxDistance = 0
+        minDistance = 9999
+        
+        eigenspaceBild = projectImageOnEigenspace(relevantEigenfaces, NormedTestFace[0])
+        
+        for j in range(len(matrix)):
+             
+            tmpeigenspaceBild = projectImageOnEigenspace(relevantEigenfaces, matrix[j])
+            print tmpeigenspaceBild
+            
+            # calculate the euclidean distance between xthe two eigenfaces
+            distance = calculateEuclideanDistance(eigenspaceBild, tmpeigenspaceBild)
+                
+            if distance > maxDistance:
+                maxDistance = distance
+                maxJ = j
+                
+            if distance < minDistance:
+                minDistance = distance
+                minJ = j
+        
+        if distance > 500:
+            print "Keine Uebereinstimmung gefunden - Distanz: " + str(distance)
+        else:
+            print "Testbild: " + str(testImageDirAndFilename)
+            print "Aehnlichstes Bild: " + str(imagelist[minJ])
+            print "Distanz: " + str(round(minDistance,2))
+            imgResult = faceList[minJ]
+            imgResult.show()
+        
+mainTest()        

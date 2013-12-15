@@ -32,7 +32,7 @@ class JUnitTestCases(unittest.TestCase):
         matrix = face.convertImgListToNumpyData(41750, images)
         normedArrayOfFaces = face.calculateNormedArrayOfFaces(41750, matrix)
         face.saveEigenvektorsAsImage(matrix, normedArrayOfFaces)
-
+        
 
 suite = unittest.TestLoader().loadTestsFromTestCase(JUnitTestCases)
 unittest.TextTestRunner(verbosity=2).run(suite)
