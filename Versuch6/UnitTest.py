@@ -30,8 +30,38 @@ class JUnitTestCases(unittest.TestCase):
     def test_saveEigenvectors(self):
         images = face.generateListOfImgs(face.parseDirectory('res/test', 'png'))
         matrix = face.convertImgListToNumpyData(41750, images)
+        imageAverage = face.calculateAverageArrayOfFaces(matrix)
         normedArrayOfFaces = face.calculateNormedArrayOfFaces(41750, matrix)
-        face.saveEigenvektorsAsImage(matrix, normedArrayOfFaces)
+        face.saveEigenvektorsAsImage(imageAverage, normedArrayOfFaces)
+        
+    def est_minimum(self):
+        testImageCount = 7
+        
+        # detect "fehlklassifikationen"
+        print "detect 'fehlklassifikationen'"
+        print "K = 1"
+        for idx in range(testImageCount):
+            face.mainTest(1, 10000)
+        print "K = 2"
+        for idx in range(testImageCount):
+            face.mainTest(2, 10000)
+        print "K = 3"
+        for idx in range(testImageCount):
+            face.mainTest(3, 10000)
+        
+            
+        # detect correlation between eigenvector count and minimum distance
+        print "detect correlation between eigenvector count and minimum distance"
+        print "K = 1"
+        face.mainTest(1, 10000)
+        print "K = 2"
+        face.mainTest(2, 10000)
+        print "K = 3" 
+        face.mainTest(3, 10000)
+        print "K = 4"
+        face.mainTest(4, 10000)
+        print "K = 5"
+        face.mainTest(5, 10000)
         
 
 suite = unittest.TestLoader().loadTestsFromTestCase(JUnitTestCases)
